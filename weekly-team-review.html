@@ -1,4 +1,10 @@
-<div id="app-root"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SumanTV — Weekly Team Review &amp; Planning</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --navy:#0F2A47;
@@ -17,17 +23,16 @@
     --font-body: -apple-system, "Segoe UI", Calibri, Arial, sans-serif;
   }
   *{box-sizing:border-box;}
-  #app-root{
+  html,body{margin:0;padding:0;}
+  body{
     font-family:var(--font-body);
     color:var(--ink);
     background:var(--offwhite);
     min-height:100vh;
-    padding:0;
     -webkit-font-smoothing:antialiased;
   }
   .shell{max-width:1180px;margin:0 auto;padding:0 24px 64px;}
 
-  /* ---- Header ---- */
   .topbar{
     background:var(--navy);
     color:var(--white);
@@ -60,7 +65,6 @@
   .tab-btn.active{background:var(--teal);border-color:var(--teal);color:var(--white);}
   .tab-btn:hover:not(.active){background:rgba(255,255,255,0.08);color:var(--white);}
 
-  /* ---- Generic ---- */
   h2.section-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin:0 0 4px;color:var(--ink);}
   .section-sub{color:var(--muted);font-size:13px;margin:0 0 18px;}
   .card{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:20px;
@@ -80,7 +84,6 @@
   textarea{resize:vertical;min-height:64px;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
   .field{margin-bottom:14px;}
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card-tint);
@@ -99,17 +102,16 @@
   .btn-primary:hover{background:#166079;}
   .btn-secondary{background:var(--white);color:var(--ink);border:1px solid var(--line);}
   .btn-secondary:hover{background:var(--card-tint);}
-  .btn-coral{background:var(--coral);color:var(--white);}
   .btn:disabled{opacity:.5;cursor:not-allowed;}
 
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
     background:var(--navy);color:var(--white);padding:12px 22px;border-radius:8px;
     font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:50;
-    display:flex;align-items:center;gap:10px;
+    display:flex;align-items:center;gap:10px;max-width:90vw;text-align:center;
   }
+  .toast.error{background:var(--coral);}
 
-  /* ---- Dashboard ---- */
   .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
   .stat-card{background:var(--midnight);color:var(--white);border-radius:10px;padding:18px 20px;}
   .stat-label{font-size:10.5px;letter-spacing:1px;font-weight:700;color:var(--sky);text-transform:uppercase;margin-bottom:8px;}
@@ -138,15 +140,27 @@
   .detail-section p, .detail-section li{font-size:13px;color:var(--muted);}
 
   .footer-note{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;line-height:1.6;}
+  .conn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .conn-ok{background:#3FBE7C;}
+  .conn-bad{background:var(--coral);}
+  .conn-status{font-size:11px;color:var(--sky);display:flex;align-items:center;margin-top:4px;}
 
   @media (max-width: 720px){
-    .grid2,.grid3,.grid4,.stat-strip{grid-template-columns:1fr;}
+    .grid2,.grid3,.stat-strip{grid-template-columns:1fr;}
     .h1{font-size:20px;}
   }
 </style>
+</head>
+<body>
+<div id="app-root"></div>
 
 <script>
 (function(){
+
+  // ---- Supabase connection ----
+  const SUPABASE_URL = "https://jtdnjzqedweyazizsgbe.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_8BcMvZvvX1x9SEKU5DMvJA_Tax_qwY1";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const CATEGORIES = ["Health","Devotion","News","Entertainment","Business","UGC","Women"];
   const TYPES = [
@@ -158,9 +172,9 @@
 
   function nextTuesdayISO(){
     const d = new Date();
-    const day = d.getDay(); // 0 sun ... 2 tue
+    const day = d.getDay();
     let add = (2 - day + 7) % 7;
-    if(add === 0 && d.getHours() >= 18) add = 7; // if already past tue evening, roll to next
+    if(add === 0 && d.getHours() >= 18) add = 7;
     d.setDate(d.getDate() + add);
     return d.toISOString().slice(0,10);
   }
@@ -174,45 +188,88 @@
       plan: { content:"", campaigns:"", focus:"", challenges:"", support:"" },
       target: { monetization:"", advertising:"", course:"", total:"", collection:"", ros:"" },
       actions: [ {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""} ],
-      submittedAt: null,
     };
   }
 
-  function slug(s){ return (s||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); }
   function fmtMoney(n){ const v = parseFloat(n); if(isNaN(v)) return "—"; return "₹" + v.toLocaleString("en-IN"); }
   function fmtDate(iso){ if(!iso) return "—"; const d = new Date(iso+"T00:00:00"); return d.toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}); }
+  function numOrNull(v){ if(v===""||v===undefined||v===null) return null; const n = parseFloat(v); return isNaN(n)?null:n; }
+  function intOrNull(v){ if(v===""||v===undefined||v===null) return null; const n = parseInt(v); return isNaN(n)?null:n; }
 
   const state = {
     tab: "form",
     report: emptyReport(),
     saving: false,
     toast: null,
+    toastError: false,
     week: nextTuesdayISO(),
     weeks: [],
     entries: [],
     loadingDashboard: false,
-    detailKey: null,
+    detailId: null,
+    connStatus: "checking", // checking | ok | bad
   };
 
   const root = document.getElementById("app-root");
 
-  function showToast(msg){
+  function showToast(msg, isError){
     state.toast = msg;
+    state.toastError = !!isError;
     render();
-    setTimeout(()=>{ state.toast = null; render(); }, 2600);
+    setTimeout(()=>{ state.toast = null; render(); }, 3200);
+  }
+
+  async function checkConnection(){
+    try{
+      const { error } = await sb.from("weekly_reports").select("id", { count: "exact", head: true });
+      state.connStatus = error ? "bad" : "ok";
+    }catch(e){
+      state.connStatus = "bad";
+    }
+    render();
+  }
+
+  function reportToRow(r){
+    return {
+      team: r.team.trim(),
+      category: r.category,
+      report_type: r.type,
+      week_date: r.week,
+      presenter: r.presenter || null,
+      lw_monetization: numOrNull(r.lastWeek.monetization),
+      lw_advertising: numOrNull(r.lastWeek.advertising),
+      lw_course: numOrNull(r.lastWeek.course),
+      lw_total_revenue: numOrNull(r.lastWeek.totalRevenue),
+      lw_ros: intOrNull(r.lastWeek.ros),
+      lw_collected: numOrNull(r.lastWeek.collected),
+      lw_achievements: r.lastWeek.achievements || null,
+      top_content: r.topContent.filter(c=>c.title),
+      best_content: r.bestContent || null,
+      plan_content: r.plan.content || null,
+      plan_campaigns: r.plan.campaigns || null,
+      plan_focus: r.plan.focus || null,
+      plan_challenges: r.plan.challenges || null,
+      plan_support: r.plan.support || null,
+      tg_monetization: numOrNull(r.target.monetization),
+      tg_advertising: numOrNull(r.target.advertising),
+      tg_course: numOrNull(r.target.course),
+      tg_total: numOrNull(r.target.total),
+      tg_collection: numOrNull(r.target.collection),
+      tg_ros: intOrNull(r.target.ros),
+      actions: r.actions.filter(a=>a.priority),
+    };
   }
 
   async function saveReport(){
-    if(!state.report.team.trim()){ showToast("Please enter a team name before saving."); return; }
+    if(!state.report.team.trim()){ showToast("Please enter a team name before saving.", true); return; }
     state.saving = true; render();
-    const key = "report:" + slug(state.report.team) + ":" + state.report.week;
-    state.report.submittedAt = new Date().toISOString();
     try{
-      const res = await window.storage.set(key, JSON.stringify(state.report), true);
-      if(!res) throw new Error("no result");
-      showToast("Saved — visible to all teams on the dashboard for " + fmtDate(state.report.week));
+      const row = reportToRow(state.report);
+      const { error } = await sb.from("weekly_reports").upsert(row, { onConflict: "team_slug,week_date" });
+      if(error) throw error;
+      showToast("Saved — visible on the Team Dashboard for " + fmtDate(state.report.week));
     }catch(e){
-      showToast("Couldn't save right now. Please try again.");
+      showToast("Couldn't save: " + (e.message || "unknown error"), true);
     }
     state.saving = false; render();
   }
@@ -220,25 +277,16 @@
   async function loadDashboard(){
     state.loadingDashboard = true; render();
     try{
-      const listRes = await window.storage.list("report:", true);
-      const keys = (listRes && listRes.keys) ? listRes.keys : [];
-      const entries = [];
-      const weekSet = new Set();
-      for(const k of keys){
-        try{
-          const r = await window.storage.get(k, true);
-          if(r && r.value){
-            const obj = JSON.parse(r.value);
-            entries.push({ key: k, data: obj });
-            if(obj.week) weekSet.add(obj.week);
-          }
-        }catch(e){ /* skip unreadable entry */ }
-      }
-      state.entries = entries;
+      const { data, error } = await sb.from("weekly_reports").select("*").order("week_date", { ascending: false });
+      if(error) throw error;
+      state.entries = data || [];
+      const weekSet = new Set(state.entries.map(e => e.week_date));
       state.weeks = Array.from(weekSet).sort().reverse();
       if(!state.weeks.includes(state.week) && state.weeks.length){ state.week = state.weeks[0]; }
+      state.connStatus = "ok";
     }catch(e){
-      showToast("Couldn't load the dashboard right now.");
+      showToast("Couldn't load the dashboard: " + (e.message || "unknown error"), true);
+      state.connStatus = "bad";
     }
     state.loadingDashboard = false; render();
   }
@@ -249,9 +297,9 @@
     render();
   }
 
-  // ---------- Renderers ----------
-
   function renderTopbar(){
+    const dot = state.connStatus === "ok" ? "conn-ok" : (state.connStatus === "bad" ? "conn-bad" : "conn-ok");
+    const label = state.connStatus === "ok" ? "Connected to live database" : (state.connStatus === "bad" ? "Connection issue — retrying" : "Connecting…");
     return `
       <div class="topbar">
         <div class="topbar-inner">
@@ -261,6 +309,7 @@
               <div class="brand-text">SUMANTV</div>
             </div>
             <div class="h1">Weekly Team Review &amp; Planning</div>
+            <div class="conn-status"><span class="conn-dot ${dot}"></span>${label}</div>
           </div>
           <div class="tabs">
             <button class="tab-btn ${state.tab==='form'?'active':''}" data-tab="form">Submit Report</button>
@@ -274,6 +323,17 @@
   function chip(label, selected, dataset){
     return `<div class="chip ${selected?'selected':''}" ${dataset}>${label}</div>`;
   }
+
+  function moneyField(id,label,val){
+    return `<div class="field"><label class="field-label">${label}</label>
+      <input type="text" inputmode="numeric" placeholder="₹ 0" id="${id}" value="${escapeAttr(val)}"/></div>`;
+  }
+  function numField(id,label,val){
+    return `<div class="field"><label class="field-label">${label}</label>
+      <input type="text" inputmode="numeric" placeholder="0" id="${id}" value="${escapeAttr(val)}"/></div>`;
+  }
+  function escapeHtml(s){ return (s||"").toString().replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
 
   function renderForm(){
     const r = state.report;
@@ -300,15 +360,11 @@
         </div>
         <div class="field">
           <label class="field-label">CATEGORY</label>
-          <div class="chips">
-            ${CATEGORIES.map(c=>chip(c, r.category===c, `data-cat="${c}"`)).join("")}
-          </div>
+          <div class="chips">${CATEGORIES.map(c=>chip(c, r.category===c, `data-cat="${c}"`)).join("")}</div>
         </div>
         <div class="field" style="margin-bottom:0">
           <label class="field-label">REVENUE TYPE</label>
-          <div class="chips">
-            ${TYPES.map(t=>chip(t.v+" — "+t.d, r.type===t.v, `data-type="${t.v}"`)).join("")}
-          </div>
+          <div class="chips">${TYPES.map(t=>chip(t.v+" — "+t.d, r.type===t.v, `data-type="${t.v}"`)).join("")}</div>
         </div>
       </div>
 
@@ -424,31 +480,19 @@
         <button class="btn btn-primary" id="btn-save" ${state.saving?"disabled":""}>${state.saving?"Saving…":"Save Weekly Report"}</button>
       </div>
 
-      <p class="footer-note">Saved reports are shared with all team heads on the Team Dashboard tab for cross-team comparison.<br/>Fields are stored as entered — figures should be verified against finance / RO records before saving.</p>
+      <p class="footer-note">Saving writes to the shared SumanTV database — every team head's report appears on the Team Dashboard tab, for every team, instantly.<br/>Saving again with the same team name and date updates that report (it won't create a duplicate).</p>
     </div>
     `;
   }
 
-  function moneyField(id,label,val){
-    return `<div class="field"><label class="field-label">${label}</label>
-      <input type="text" inputmode="numeric" placeholder="₹ 0" id="${id}" value="${escapeAttr(val)}"/></div>`;
-  }
-  function numField(id,label,val){
-    return `<div class="field"><label class="field-label">${label}</label>
-      <input type="text" inputmode="numeric" placeholder="0" id="${id}" value="${escapeAttr(val)}"/></div>`;
-  }
-
-  function escapeHtml(s){ return (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
-  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
-
   function computeTotals(entries, week){
-    const inWeek = entries.filter(e => e.data.week === week);
+    const inWeek = entries.filter(e => e.week_date === week);
     let totalRevenue = 0, totalTarget = 0, totalROs = 0, totalCollected = 0;
     inWeek.forEach(e=>{
-      totalRevenue += parseFloat(e.data.lastWeek.totalRevenue) || 0;
-      totalTarget += parseFloat(e.data.target.total) || 0;
-      totalROs += parseFloat(e.data.lastWeek.ros) || 0;
-      totalCollected += parseFloat(e.data.lastWeek.collected) || 0;
+      totalRevenue += parseFloat(e.lw_total_revenue) || 0;
+      totalTarget += parseFloat(e.tg_total) || 0;
+      totalROs += parseInt(e.lw_ros) || 0;
+      totalCollected += parseFloat(e.lw_collected) || 0;
     });
     return { inWeek, totalRevenue, totalTarget, totalROs, totalCollected };
   }
@@ -467,20 +511,19 @@
     const { inWeek, totalRevenue, totalTarget, totalROs, totalCollected } = computeTotals(state.entries, state.week);
     const weekOptions = state.weeks.map(w => `<option value="${w}" ${w===state.week?"selected":""}>${fmtDate(w)}</option>`).join("");
 
-    const rows = inWeek.sort((a,b)=> (parseFloat(b.data.lastWeek.totalRevenue)||0) - (parseFloat(a.data.lastWeek.totalRevenue)||0)).map(e=>{
-      const d = e.data;
-      const rev = parseFloat(d.lastWeek.totalRevenue)||0;
-      const tgt = parseFloat(d.target.total)||0;
+    const rows = inWeek.slice().sort((a,b)=> (parseFloat(b.lw_total_revenue)||0) - (parseFloat(a.lw_total_revenue)||0)).map(d=>{
+      const rev = parseFloat(d.lw_total_revenue)||0;
+      const tgt = parseFloat(d.tg_total)||0;
       const prevAchievement = tgt>0 ? Math.round((rev/tgt)*100) : null;
       const pillClass = prevAchievement===null ? "" : (prevAchievement>=100 ? "pill-good" : "pill-warn");
       return `
-        <tr data-detail="${e.key}">
-          <td><strong>${escapeHtml(d.team)}</strong><div style="color:var(--muted);font-size:11px;">${escapeHtml(d.category)} · ${escapeHtml(d.type)}</div></td>
-          <td>${fmtMoney(d.lastWeek.totalRevenue)}</td>
-          <td>${fmtMoney(d.target.total)}</td>
+        <tr data-detail="${d.id}">
+          <td><strong>${escapeHtml(d.team)}</strong><div style="color:var(--muted);font-size:11px;">${escapeHtml(d.category)} · ${escapeHtml(d.report_type)}</div></td>
+          <td>${fmtMoney(d.lw_total_revenue)}</td>
+          <td>${fmtMoney(d.tg_total)}</td>
           <td>${prevAchievement===null?"—":`<span class="pill ${pillClass}">${prevAchievement}%</span>`}</td>
-          <td>${d.lastWeek.ros||"—"}</td>
-          <td>${fmtMoney(d.lastWeek.collected)}</td>
+          <td>${d.lw_ros ?? "—"}</td>
+          <td>${fmtMoney(d.lw_collected)}</td>
         </tr>
       `;
     }).join("");
@@ -517,49 +560,50 @@
   }
 
   function renderDetail(){
-    if(!state.detailKey) return "";
-    const entry = state.entries.find(e => e.key === state.detailKey);
-    if(!entry) return "";
-    const d = entry.data;
+    if(!state.detailId) return "";
+    const d = state.entries.find(e => String(e.id) === String(state.detailId));
+    if(!d) return "";
+    const topContent = Array.isArray(d.top_content) ? d.top_content : [];
+    const actions = Array.isArray(d.actions) ? d.actions : [];
     return `
     <div class="detail-overlay" id="detail-overlay">
       <div class="detail-panel">
         <button class="detail-close" id="detail-close">✕</button>
-        <div class="eyebrow">${escapeHtml(d.category)} · ${escapeHtml(d.type)} · ${fmtDate(d.week)}</div>
+        <div class="eyebrow">${escapeHtml(d.category)} · ${escapeHtml(d.report_type)} · ${fmtDate(d.week_date)}</div>
         <h2 class="section-title" style="font-size:24px;margin-top:4px;">${escapeHtml(d.team)}</h2>
         <p class="section-sub">Presented by ${escapeHtml(d.presenter)||"—"}</p>
 
         <div class="detail-section">
           <h4>Last Week Performance</h4>
-          <p>Monetization: ${fmtMoney(d.lastWeek.monetization)} · Advertising: ${fmtMoney(d.lastWeek.advertising)} · Course: ${fmtMoney(d.lastWeek.course)}</p>
-          <p>Total Revenue: ${fmtMoney(d.lastWeek.totalRevenue)} · ROs: ${d.lastWeek.ros||"—"} · Collected: ${fmtMoney(d.lastWeek.collected)}</p>
-          ${d.lastWeek.achievements ? `<p><strong>Achievements:</strong><br/>${escapeHtml(d.lastWeek.achievements).replace(/\n/g,"<br/>")}</p>` : ""}
+          <p>Monetization: ${fmtMoney(d.lw_monetization)} · Advertising: ${fmtMoney(d.lw_advertising)} · Course: ${fmtMoney(d.lw_course)}</p>
+          <p>Total Revenue: ${fmtMoney(d.lw_total_revenue)} · ROs: ${d.lw_ros ?? "—"} · Collected: ${fmtMoney(d.lw_collected)}</p>
+          ${d.lw_achievements ? `<p><strong>Achievements:</strong><br/>${escapeHtml(d.lw_achievements).replace(/\n/g,"<br/>")}</p>` : ""}
         </div>
 
         <div class="detail-section">
           <h4>Top Content</h4>
-          <ul>${d.topContent.filter(c=>c.title).map(c=>`<li>${escapeHtml(c.title)} — ${escapeHtml(c.platform)} · ${escapeHtml(c.views)} views · ${fmtMoney(c.revenue)}</li>`).join("") || "<li>Not provided</li>"}</ul>
-          ${d.bestContent ? `<p><strong>Best performer:</strong> ${escapeHtml(d.bestContent)}</p>`:""}
+          <ul>${topContent.length ? topContent.map(c=>`<li>${escapeHtml(c.title)} — ${escapeHtml(c.platform)} · ${escapeHtml(c.views)} views · ${fmtMoney(c.revenue)}</li>`).join("") : "<li>Not provided</li>"}</ul>
+          ${d.best_content ? `<p><strong>Best performer:</strong> ${escapeHtml(d.best_content)}</p>`:""}
         </div>
 
         <div class="detail-section">
           <h4>This Week's Plan</h4>
-          ${d.plan.content ? `<p><strong>Content:</strong> ${escapeHtml(d.plan.content)}</p>`:""}
-          ${d.plan.campaigns ? `<p><strong>Campaigns:</strong> ${escapeHtml(d.plan.campaigns)}</p>`:""}
-          ${d.plan.focus ? `<p><strong>Focus:</strong> ${escapeHtml(d.plan.focus)}</p>`:""}
-          ${d.plan.challenges ? `<p><strong>Challenges:</strong> ${escapeHtml(d.plan.challenges)}</p>`:""}
-          ${d.plan.support ? `<p><strong>Support needed:</strong> ${escapeHtml(d.plan.support)}</p>`:""}
+          ${d.plan_content ? `<p><strong>Content:</strong> ${escapeHtml(d.plan_content)}</p>`:""}
+          ${d.plan_campaigns ? `<p><strong>Campaigns:</strong> ${escapeHtml(d.plan_campaigns)}</p>`:""}
+          ${d.plan_focus ? `<p><strong>Focus:</strong> ${escapeHtml(d.plan_focus)}</p>`:""}
+          ${d.plan_challenges ? `<p><strong>Challenges:</strong> ${escapeHtml(d.plan_challenges)}</p>`:""}
+          ${d.plan_support ? `<p><strong>Support needed:</strong> ${escapeHtml(d.plan_support)}</p>`:""}
         </div>
 
         <div class="detail-section">
           <h4>This Week's Targets</h4>
-          <p>Monetization: ${fmtMoney(d.target.monetization)} · Advertising: ${fmtMoney(d.target.advertising)} · Course: ${fmtMoney(d.target.course)}</p>
-          <p>Total: ${fmtMoney(d.target.total)} · Collection: ${fmtMoney(d.target.collection)} · Expected ROs: ${d.target.ros||"—"}</p>
+          <p>Monetization: ${fmtMoney(d.tg_monetization)} · Advertising: ${fmtMoney(d.tg_advertising)} · Course: ${fmtMoney(d.tg_course)}</p>
+          <p>Total: ${fmtMoney(d.tg_total)} · Collection: ${fmtMoney(d.tg_collection)} · Expected ROs: ${d.tg_ros ?? "—"}</p>
         </div>
 
         <div class="detail-section" style="margin-bottom:0;">
           <h4>Action Plan</h4>
-          <ul>${d.actions.filter(a=>a.priority).map(a=>`<li>${escapeHtml(a.priority)} — <em>${escapeHtml(a.owner)}</em>${a.outcome ? " → "+escapeHtml(a.outcome):""}</li>`).join("") || "<li>Not provided</li>"}</ul>
+          <ul>${actions.length ? actions.map(a=>`<li>${escapeHtml(a.priority)} — <em>${escapeHtml(a.owner)}</em>${a.outcome ? " → "+escapeHtml(a.outcome):""}</li>`).join("") : "<li>Not provided</li>"}</ul>
         </div>
       </div>
     </div>
@@ -571,7 +615,7 @@
       ${renderTopbar()}
       ${state.tab === "form" ? renderForm() : renderDashboard()}
       ${renderDetail()}
-      ${state.toast ? `<div class="toast">${state.toast}</div>` : ""}
+      ${state.toast ? `<div class="toast ${state.toastError?'error':''}">${escapeHtml(state.toast)}</div>` : ""}
     `;
     attachHandlers();
   }
@@ -586,9 +630,7 @@
       const bind = (id, path) => {
         const el = root.querySelector("#"+id);
         if(!el) return;
-        el.addEventListener("input", (e)=>{
-          setPath(r, path, e.target.value);
-        });
+        el.addEventListener("input", (e)=>{ setPath(r, path, e.target.value); });
       };
       bind("f-team","team"); bind("f-presenter","presenter"); bind("f-week","week");
       bind("lw-monetization","lastWeek.monetization"); bind("lw-advertising","lastWeek.advertising");
@@ -633,12 +675,12 @@
       const weekSel = root.querySelector("#week-select");
       if(weekSel) weekSel.addEventListener("change", (e)=>{ state.week = e.target.value; render(); });
       root.querySelectorAll("tr[data-detail]").forEach(el=>{
-        el.addEventListener("click", ()=>{ state.detailKey = el.getAttribute("data-detail"); render(); });
+        el.addEventListener("click", ()=>{ state.detailId = el.getAttribute("data-detail"); render(); });
       });
       const overlay = root.querySelector("#detail-overlay");
-      if(overlay) overlay.addEventListener("click", (e)=>{ if(e.target.id==="detail-overlay"){ state.detailKey=null; render(); } });
+      if(overlay) overlay.addEventListener("click", (e)=>{ if(e.target.id==="detail-overlay"){ state.detailId=null; render(); } });
       const closeBtn = root.querySelector("#detail-close");
-      if(closeBtn) closeBtn.addEventListener("click", ()=>{ state.detailKey=null; render(); });
+      if(closeBtn) closeBtn.addEventListener("click", ()=>{ state.detailId=null; render(); });
     }
   }
 
@@ -650,5 +692,8 @@
   }
 
   render();
+  checkConnection();
 })();
 </script>
+</body>
+</html>
