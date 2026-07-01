@@ -1,0 +1,654 @@
+<div id="app-root"></div>
+<style>
+  :root{
+    --navy:#0F2A47;
+    --midnight:#16324F;
+    --teal:#1C7293;
+    --sky:#6FB7D1;
+    --coral:#E8543E;
+    --gold:#F2A93B;
+    --offwhite:#F7F9FA;
+    --card-tint:#EDF3F6;
+    --ink:#16324F;
+    --muted:#5B7186;
+    --line:#E3EAEE;
+    --white:#FFFFFF;
+    --font-head: Georgia, Cambria, "Times New Roman", serif;
+    --font-body: -apple-system, "Segoe UI", Calibri, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  #app-root{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:var(--offwhite);
+    min-height:100vh;
+    padding:0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .shell{max-width:1180px;margin:0 auto;padding:0 24px 64px;}
+
+  /* ---- Header ---- */
+  .topbar{
+    background:var(--navy);
+    color:var(--white);
+    padding:22px 0;
+    margin-bottom:28px;
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute; right:-60px; top:-90px;
+    width:260px;height:260px;border-radius:50%;
+    background:var(--midnight);
+    z-index:0;
+  }
+  .topbar-inner{max-width:1180px;margin:0 auto;padding:0 24px;position:relative;z-index:1;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:8px;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;font-family:var(--font-head);
+    font-weight:700;color:var(--white);font-size:16px;}
+  .brand-text{font-size:13px;letter-spacing:1.5px;font-weight:700;color:var(--sky);}
+  .h1{font-family:var(--font-head);font-size:26px;font-weight:700;margin:2px 0 0;color:var(--white);}
+  .tabs{display:flex;gap:8px;}
+  .tab-btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.25);
+    color:var(--sky); padding:9px 16px;border-radius:20px;font-size:13px;font-weight:600;
+    cursor:pointer;transition:all .15s ease;
+  }
+  .tab-btn.active{background:var(--teal);border-color:var(--teal);color:var(--white);}
+  .tab-btn:hover:not(.active){background:rgba(255,255,255,0.08);color:var(--white);}
+
+  /* ---- Generic ---- */
+  h2.section-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin:0 0 4px;color:var(--ink);}
+  .section-sub{color:var(--muted);font-size:13px;margin:0 0 18px;}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:20px;
+    box-shadow:0 1px 3px rgba(15,42,71,0.04);}
+  .badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
+    background:var(--teal);color:var(--white);font-family:var(--font-head);font-weight:700;font-size:13px;margin-right:10px;}
+  .section-head{display:flex;align-items:center;margin-bottom:16px;}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;}
+
+  label.field-label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.3px;}
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:7px;
+    font-family:var(--font-body);font-size:13.5px;color:var(--ink);background:var(--offwhite);
+    transition:border-color .15s ease;
+  }
+  input:focus, select:focus, textarea:focus{outline:none;border-color:var(--teal);background:var(--white);}
+  textarea{resize:vertical;min-height:64px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .field{margin-bottom:14px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{padding:8px 14px;border-radius:20px;border:1px solid var(--line);background:var(--card-tint);
+    font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .15s ease;}
+  .chip.selected{background:var(--teal);border-color:var(--teal);color:var(--white);}
+
+  .row-list{display:flex;flex-direction:column;gap:10px;}
+  .row-item{display:grid;gap:8px;background:var(--offwhite);border:1px solid var(--line);border-radius:8px;padding:12px;}
+  .row-item .row-num{font-family:var(--font-head);font-weight:700;color:var(--teal);font-size:13px;}
+
+  .btn{
+    padding:11px 22px;border-radius:8px;font-weight:700;font-size:13.5px;cursor:pointer;border:none;
+    transition:all .15s ease;
+  }
+  .btn-primary{background:var(--teal);color:var(--white);}
+  .btn-primary:hover{background:#166079;}
+  .btn-secondary{background:var(--white);color:var(--ink);border:1px solid var(--line);}
+  .btn-secondary:hover{background:var(--card-tint);}
+  .btn-coral{background:var(--coral);color:var(--white);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:var(--white);padding:12px 22px;border-radius:8px;
+    font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:50;
+    display:flex;align-items:center;gap:10px;
+  }
+
+  /* ---- Dashboard ---- */
+  .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .stat-card{background:var(--midnight);color:var(--white);border-radius:10px;padding:18px 20px;}
+  .stat-label{font-size:10.5px;letter-spacing:1px;font-weight:700;color:var(--sky);text-transform:uppercase;margin-bottom:8px;}
+  .stat-value{font-family:var(--font-head);font-size:26px;font-weight:700;}
+
+  .week-select-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+  table.team-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:10px;overflow:hidden;
+    border:1px solid var(--line);}
+  table.team-table th{background:var(--midnight);color:var(--white);text-align:left;padding:12px 14px;font-size:11.5px;
+    letter-spacing:.4px;text-transform:uppercase;font-weight:700;}
+  table.team-table td{padding:13px 14px;border-top:1px solid var(--line);font-size:13px;}
+  table.team-table tr:hover td{background:var(--card-tint);cursor:pointer;}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;}
+  .pill-good{background:#E4F5EC;color:#1E7A46;}
+  .pill-warn{background:#FDECE9;color:var(--coral);}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state .big{font-size:40px;margin-bottom:12px;}
+
+  .detail-overlay{position:fixed;inset:0;background:rgba(15,42,71,0.55);display:flex;align-items:flex-start;
+    justify-content:center;padding:40px 20px;overflow-y:auto;z-index:40;}
+  .detail-panel{background:var(--white);border-radius:12px;max-width:760px;width:100%;padding:28px;position:relative;}
+  .detail-close{position:absolute;top:18px;right:18px;background:var(--card-tint);border:none;width:32px;height:32px;
+    border-radius:50%;cursor:pointer;font-size:16px;color:var(--muted);}
+  .detail-section{margin-bottom:18px;}
+  .detail-section h4{font-family:var(--font-head);font-size:14px;margin:0 0 8px;color:var(--ink);}
+  .detail-section p, .detail-section li{font-size:13px;color:var(--muted);}
+
+  .footer-note{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;line-height:1.6;}
+
+  @media (max-width: 720px){
+    .grid2,.grid3,.grid4,.stat-strip{grid-template-columns:1fr;}
+    .h1{font-size:20px;}
+  }
+</style>
+
+<script>
+(function(){
+
+  const CATEGORIES = ["Health","Devotion","News","Entertainment","Business","UGC","Women"];
+  const TYPES = [
+    {v:"Type 1", d:"Monetization Revenue only"},
+    {v:"Type 2", d:"Monetization + Advertising Revenue"},
+    {v:"Type 3", d:"Monetization + Advertising + Course Revenue"},
+    {v:"Type 4", d:"Advertising Revenue only"},
+  ];
+
+  function nextTuesdayISO(){
+    const d = new Date();
+    const day = d.getDay(); // 0 sun ... 2 tue
+    let add = (2 - day + 7) % 7;
+    if(add === 0 && d.getHours() >= 18) add = 7; // if already past tue evening, roll to next
+    d.setDate(d.getDate() + add);
+    return d.toISOString().slice(0,10);
+  }
+
+  function emptyReport(){
+    return {
+      team: "", category: "Health", type: "Type 1", week: nextTuesdayISO(), presenter:"",
+      lastWeek: { monetization:"", advertising:"", course:"", totalRevenue:"", ros:"", collected:"", achievements:"" },
+      topContent: [ {title:"",platform:"",views:"",engagement:"",revenue:""}, {title:"",platform:"",views:"",engagement:"",revenue:""}, {title:"",platform:"",views:"",engagement:"",revenue:""}, {title:"",platform:"",views:"",engagement:"",revenue:""}, {title:"",platform:"",views:"",engagement:"",revenue:""} ],
+      bestContent: "",
+      plan: { content:"", campaigns:"", focus:"", challenges:"", support:"" },
+      target: { monetization:"", advertising:"", course:"", total:"", collection:"", ros:"" },
+      actions: [ {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""}, {priority:"",owner:"",outcome:""} ],
+      submittedAt: null,
+    };
+  }
+
+  function slug(s){ return (s||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,""); }
+  function fmtMoney(n){ const v = parseFloat(n); if(isNaN(v)) return "—"; return "₹" + v.toLocaleString("en-IN"); }
+  function fmtDate(iso){ if(!iso) return "—"; const d = new Date(iso+"T00:00:00"); return d.toLocaleDateString("en-IN",{weekday:"short",day:"2-digit",month:"short",year:"numeric"}); }
+
+  const state = {
+    tab: "form",
+    report: emptyReport(),
+    saving: false,
+    toast: null,
+    week: nextTuesdayISO(),
+    weeks: [],
+    entries: [],
+    loadingDashboard: false,
+    detailKey: null,
+  };
+
+  const root = document.getElementById("app-root");
+
+  function showToast(msg){
+    state.toast = msg;
+    render();
+    setTimeout(()=>{ state.toast = null; render(); }, 2600);
+  }
+
+  async function saveReport(){
+    if(!state.report.team.trim()){ showToast("Please enter a team name before saving."); return; }
+    state.saving = true; render();
+    const key = "report:" + slug(state.report.team) + ":" + state.report.week;
+    state.report.submittedAt = new Date().toISOString();
+    try{
+      const res = await window.storage.set(key, JSON.stringify(state.report), true);
+      if(!res) throw new Error("no result");
+      showToast("Saved — visible to all teams on the dashboard for " + fmtDate(state.report.week));
+    }catch(e){
+      showToast("Couldn't save right now. Please try again.");
+    }
+    state.saving = false; render();
+  }
+
+  async function loadDashboard(){
+    state.loadingDashboard = true; render();
+    try{
+      const listRes = await window.storage.list("report:", true);
+      const keys = (listRes && listRes.keys) ? listRes.keys : [];
+      const entries = [];
+      const weekSet = new Set();
+      for(const k of keys){
+        try{
+          const r = await window.storage.get(k, true);
+          if(r && r.value){
+            const obj = JSON.parse(r.value);
+            entries.push({ key: k, data: obj });
+            if(obj.week) weekSet.add(obj.week);
+          }
+        }catch(e){ /* skip unreadable entry */ }
+      }
+      state.entries = entries;
+      state.weeks = Array.from(weekSet).sort().reverse();
+      if(!state.weeks.includes(state.week) && state.weeks.length){ state.week = state.weeks[0]; }
+    }catch(e){
+      showToast("Couldn't load the dashboard right now.");
+    }
+    state.loadingDashboard = false; render();
+  }
+
+  function switchTab(t){
+    state.tab = t;
+    if(t === "dashboard") loadDashboard();
+    render();
+  }
+
+  // ---------- Renderers ----------
+
+  function renderTopbar(){
+    return `
+      <div class="topbar">
+        <div class="topbar-inner">
+          <div>
+            <div class="brand">
+              <div class="brand-mark">S</div>
+              <div class="brand-text">SUMANTV</div>
+            </div>
+            <div class="h1">Weekly Team Review &amp; Planning</div>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn ${state.tab==='form'?'active':''}" data-tab="form">Submit Report</button>
+            <button class="tab-btn ${state.tab==='dashboard'?'active':''}" data-tab="dashboard">Team Dashboard</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function chip(label, selected, dataset){
+    return `<div class="chip ${selected?'selected':''}" ${dataset}>${label}</div>`;
+  }
+
+  function renderForm(){
+    const r = state.report;
+    return `
+    <div class="shell">
+      <div class="card">
+        <div class="section-head"><span class="badge">•</span>
+          <div><h2 class="section-title" style="margin-bottom:0">Team &amp; Category</h2>
+          <p class="section-sub" style="margin:2px 0 0">Who's reporting, and this week's date</p></div>
+        </div>
+        <div class="grid3">
+          <div class="field">
+            <label class="field-label">TEAM NAME</label>
+            <input type="text" id="f-team" placeholder="e.g. SumanTV Health" value="${escapeAttr(r.team)}"/>
+          </div>
+          <div class="field">
+            <label class="field-label">PRESENTER (TEAM HEAD)</label>
+            <input type="text" id="f-presenter" placeholder="Your name" value="${escapeAttr(r.presenter)}"/>
+          </div>
+          <div class="field">
+            <label class="field-label">REVIEW DATE (TUESDAY)</label>
+            <input type="date" id="f-week" value="${r.week}"/>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">CATEGORY</label>
+          <div class="chips">
+            ${CATEGORIES.map(c=>chip(c, r.category===c, `data-cat="${c}"`)).join("")}
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label">REVENUE TYPE</label>
+          <div class="chips">
+            ${TYPES.map(t=>chip(t.v+" — "+t.d, r.type===t.v, `data-type="${t.v}"`)).join("")}
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><span class="badge">1</span>
+          <div><h2 class="section-title" style="margin-bottom:0">Last Week Performance</h2>
+          <p class="section-sub" style="margin:2px 0 0">Category-wise revenue, ROs and collections</p></div>
+        </div>
+        <div class="grid3">
+          ${moneyField("lw-monetization","Monetization Revenue", r.lastWeek.monetization)}
+          ${moneyField("lw-advertising","Advertising Revenue", r.lastWeek.advertising)}
+          ${moneyField("lw-course","Course Revenue (if applicable)", r.lastWeek.course)}
+        </div>
+        <div class="grid3">
+          ${moneyField("lw-total","Total Revenue (Net of GST)", r.lastWeek.totalRevenue)}
+          ${numField("lw-ros","ROs Received", r.lastWeek.ros)}
+          ${moneyField("lw-collected","Amount Collected (Net of GST)", r.lastWeek.collected)}
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label">MAJOR ACHIEVEMENTS</label>
+          <textarea id="lw-achievements" placeholder="One achievement per line...">${escapeHtml(r.lastWeek.achievements)}</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><span class="badge">2</span>
+          <div><h2 class="section-title" style="margin-bottom:0">Top 5 Videos / Content</h2>
+          <p class="section-sub" style="margin:2px 0 0">Best performing content from last week</p></div>
+        </div>
+        <div class="row-list">
+          ${r.topContent.map((c,i)=>`
+            <div class="row-item" style="grid-template-columns:24px 2fr 1fr 1fr 1fr 1fr;display:grid;">
+              <div class="row-num">${i+1}</div>
+              <input type="text" placeholder="Title / content" data-content-idx="${i}" data-content-field="title" value="${escapeAttr(c.title)}"/>
+              <input type="text" placeholder="Platform" data-content-idx="${i}" data-content-field="platform" value="${escapeAttr(c.platform)}"/>
+              <input type="text" placeholder="Views" data-content-idx="${i}" data-content-field="views" value="${escapeAttr(c.views)}"/>
+              <input type="text" placeholder="Engagement" data-content-idx="${i}" data-content-field="engagement" value="${escapeAttr(c.engagement)}"/>
+              <input type="text" placeholder="Revenue ₹" data-content-idx="${i}" data-content-field="revenue" value="${escapeAttr(c.revenue)}"/>
+            </div>
+          `).join("")}
+        </div>
+        <div class="field" style="margin-top:14px;margin-bottom:0">
+          <label class="field-label">BEST PERFORMING CONTENT — WHY IT WORKED</label>
+          <textarea id="best-content" placeholder="e.g. hook, topic, timing, distribution...">${escapeHtml(r.bestContent)}</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><span class="badge">3</span>
+          <div><h2 class="section-title" style="margin-bottom:0">Current Week Plan</h2>
+          <p class="section-sub" style="margin:2px 0 0">Content, campaigns, focus areas and support needed</p></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label class="field-label">KEY CONTENT PLAN</label>
+            <textarea id="plan-content" placeholder="Planned videos / series / formats...">${escapeHtml(r.plan.content)}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">MAJOR CAMPAIGNS / PROJECTS</label>
+            <textarea id="plan-campaigns" placeholder="Campaigns, launches, special projects...">${escapeHtml(r.plan.campaigns)}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">FOCUS AREAS</label>
+            <textarea id="plan-focus" placeholder="What this team is prioritizing and why...">${escapeHtml(r.plan.focus)}</textarea>
+          </div>
+          <div class="field">
+            <label class="field-label">CHALLENGES (IF ANY)</label>
+            <textarea id="plan-challenges" placeholder="Blockers, risks, issues...">${escapeHtml(r.plan.challenges)}</textarea>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label">SUPPORT REQUIRED FROM MANAGEMENT</label>
+          <textarea id="plan-support" placeholder="Budget / approvals / resources / decisions needed...">${escapeHtml(r.plan.support)}</textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><span class="badge">4</span>
+          <div><h2 class="section-title" style="margin-bottom:0">Current Week Revenue Target</h2>
+          <p class="section-sub" style="margin:2px 0 0">What this team is committing to this week</p></div>
+        </div>
+        <div class="grid3">
+          ${moneyField("tg-monetization","Monetization Target", r.target.monetization)}
+          ${moneyField("tg-advertising","Advertising Target", r.target.advertising)}
+          ${moneyField("tg-course","Course Target (if applicable)", r.target.course)}
+        </div>
+        <div class="grid3" style="margin-bottom:0">
+          ${moneyField("tg-total","Total Revenue Target (Net of GST)", r.target.total)}
+          ${moneyField("tg-collection","Collection Target (Net of GST)", r.target.collection)}
+          ${numField("tg-ros","Expected ROs", r.target.ros)}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head"><span class="badge">5</span>
+          <div><h2 class="section-title" style="margin-bottom:0">Action Plan</h2>
+          <p class="section-sub" style="margin:2px 0 0">Top 5 priorities and expected outcomes by next Tuesday</p></div>
+        </div>
+        <div class="row-list">
+          ${r.actions.map((a,i)=>`
+            <div class="row-item" style="grid-template-columns:24px 2fr 1fr 2fr;display:grid;">
+              <div class="row-num">${i+1}</div>
+              <input type="text" placeholder="Priority this week" data-action-idx="${i}" data-action-field="priority" value="${escapeAttr(a.priority)}"/>
+              <input type="text" placeholder="Owner" data-action-idx="${i}" data-action-field="owner" value="${escapeAttr(a.owner)}"/>
+              <input type="text" placeholder="Expected outcome by next Tuesday" data-action-idx="${i}" data-action-field="outcome" value="${escapeAttr(a.outcome)}"/>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <button class="btn btn-secondary" id="btn-reset">Clear Form</button>
+        <button class="btn btn-primary" id="btn-save" ${state.saving?"disabled":""}>${state.saving?"Saving…":"Save Weekly Report"}</button>
+      </div>
+
+      <p class="footer-note">Saved reports are shared with all team heads on the Team Dashboard tab for cross-team comparison.<br/>Fields are stored as entered — figures should be verified against finance / RO records before saving.</p>
+    </div>
+    `;
+  }
+
+  function moneyField(id,label,val){
+    return `<div class="field"><label class="field-label">${label}</label>
+      <input type="text" inputmode="numeric" placeholder="₹ 0" id="${id}" value="${escapeAttr(val)}"/></div>`;
+  }
+  function numField(id,label,val){
+    return `<div class="field"><label class="field-label">${label}</label>
+      <input type="text" inputmode="numeric" placeholder="0" id="${id}" value="${escapeAttr(val)}"/></div>`;
+  }
+
+  function escapeHtml(s){ return (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
+
+  function computeTotals(entries, week){
+    const inWeek = entries.filter(e => e.data.week === week);
+    let totalRevenue = 0, totalTarget = 0, totalROs = 0, totalCollected = 0;
+    inWeek.forEach(e=>{
+      totalRevenue += parseFloat(e.data.lastWeek.totalRevenue) || 0;
+      totalTarget += parseFloat(e.data.target.total) || 0;
+      totalROs += parseFloat(e.data.lastWeek.ros) || 0;
+      totalCollected += parseFloat(e.data.lastWeek.collected) || 0;
+    });
+    return { inWeek, totalRevenue, totalTarget, totalROs, totalCollected };
+  }
+
+  function renderDashboard(){
+    if(state.loadingDashboard){
+      return `<div class="shell"><div class="empty-state"><div class="big">⏳</div>Loading team reports…</div></div>`;
+    }
+    if(!state.entries.length){
+      return `<div class="shell"><div class="empty-state">
+        <div class="big">📊</div>
+        <h2 class="section-title">No reports submitted yet</h2>
+        <p class="section-sub">Once team heads save their weekly report, it will appear here for comparison.</p>
+      </div></div>`;
+    }
+    const { inWeek, totalRevenue, totalTarget, totalROs, totalCollected } = computeTotals(state.entries, state.week);
+    const weekOptions = state.weeks.map(w => `<option value="${w}" ${w===state.week?"selected":""}>${fmtDate(w)}</option>`).join("");
+
+    const rows = inWeek.sort((a,b)=> (parseFloat(b.data.lastWeek.totalRevenue)||0) - (parseFloat(a.data.lastWeek.totalRevenue)||0)).map(e=>{
+      const d = e.data;
+      const rev = parseFloat(d.lastWeek.totalRevenue)||0;
+      const tgt = parseFloat(d.target.total)||0;
+      const prevAchievement = tgt>0 ? Math.round((rev/tgt)*100) : null;
+      const pillClass = prevAchievement===null ? "" : (prevAchievement>=100 ? "pill-good" : "pill-warn");
+      return `
+        <tr data-detail="${e.key}">
+          <td><strong>${escapeHtml(d.team)}</strong><div style="color:var(--muted);font-size:11px;">${escapeHtml(d.category)} · ${escapeHtml(d.type)}</div></td>
+          <td>${fmtMoney(d.lastWeek.totalRevenue)}</td>
+          <td>${fmtMoney(d.target.total)}</td>
+          <td>${prevAchievement===null?"—":`<span class="pill ${pillClass}">${prevAchievement}%</span>`}</td>
+          <td>${d.lastWeek.ros||"—"}</td>
+          <td>${fmtMoney(d.lastWeek.collected)}</td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+    <div class="shell">
+      <div class="week-select-row">
+        <div>
+          <h2 class="section-title" style="margin-bottom:2px">Cross-Team Comparison</h2>
+          <p class="section-sub" style="margin:0">${inWeek.length} team${inWeek.length===1?"":"s"} reported for this week</p>
+        </div>
+        <div style="min-width:220px;">
+          <label class="field-label">WEEK</label>
+          <select id="week-select">${weekOptions}</select>
+        </div>
+      </div>
+
+      <div class="stat-strip">
+        <div class="stat-card"><div class="stat-label">Total Revenue (All Teams)</div><div class="stat-value">${fmtMoney(totalRevenue)}</div></div>
+        <div class="stat-card"><div class="stat-label">Total Target</div><div class="stat-value">${fmtMoney(totalTarget)}</div></div>
+        <div class="stat-card"><div class="stat-label">Total ROs Received</div><div class="stat-value">${totalROs || "—"}</div></div>
+        <div class="stat-card"><div class="stat-label">Total Collected</div><div class="stat-value">${fmtMoney(totalCollected)}</div></div>
+      </div>
+
+      <table class="team-table">
+        <thead><tr>
+          <th>Team</th><th>Last Week Revenue</th><th>This Week Target</th><th>vs. Prior Target</th><th>ROs</th><th>Collected</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="footer-note">Click a row to view the full report. "vs. Prior Target" compares last week's actual revenue against the target this team set previously.</p>
+    </div>
+    `;
+  }
+
+  function renderDetail(){
+    if(!state.detailKey) return "";
+    const entry = state.entries.find(e => e.key === state.detailKey);
+    if(!entry) return "";
+    const d = entry.data;
+    return `
+    <div class="detail-overlay" id="detail-overlay">
+      <div class="detail-panel">
+        <button class="detail-close" id="detail-close">✕</button>
+        <div class="eyebrow">${escapeHtml(d.category)} · ${escapeHtml(d.type)} · ${fmtDate(d.week)}</div>
+        <h2 class="section-title" style="font-size:24px;margin-top:4px;">${escapeHtml(d.team)}</h2>
+        <p class="section-sub">Presented by ${escapeHtml(d.presenter)||"—"}</p>
+
+        <div class="detail-section">
+          <h4>Last Week Performance</h4>
+          <p>Monetization: ${fmtMoney(d.lastWeek.monetization)} · Advertising: ${fmtMoney(d.lastWeek.advertising)} · Course: ${fmtMoney(d.lastWeek.course)}</p>
+          <p>Total Revenue: ${fmtMoney(d.lastWeek.totalRevenue)} · ROs: ${d.lastWeek.ros||"—"} · Collected: ${fmtMoney(d.lastWeek.collected)}</p>
+          ${d.lastWeek.achievements ? `<p><strong>Achievements:</strong><br/>${escapeHtml(d.lastWeek.achievements).replace(/\n/g,"<br/>")}</p>` : ""}
+        </div>
+
+        <div class="detail-section">
+          <h4>Top Content</h4>
+          <ul>${d.topContent.filter(c=>c.title).map(c=>`<li>${escapeHtml(c.title)} — ${escapeHtml(c.platform)} · ${escapeHtml(c.views)} views · ${fmtMoney(c.revenue)}</li>`).join("") || "<li>Not provided</li>"}</ul>
+          ${d.bestContent ? `<p><strong>Best performer:</strong> ${escapeHtml(d.bestContent)}</p>`:""}
+        </div>
+
+        <div class="detail-section">
+          <h4>This Week's Plan</h4>
+          ${d.plan.content ? `<p><strong>Content:</strong> ${escapeHtml(d.plan.content)}</p>`:""}
+          ${d.plan.campaigns ? `<p><strong>Campaigns:</strong> ${escapeHtml(d.plan.campaigns)}</p>`:""}
+          ${d.plan.focus ? `<p><strong>Focus:</strong> ${escapeHtml(d.plan.focus)}</p>`:""}
+          ${d.plan.challenges ? `<p><strong>Challenges:</strong> ${escapeHtml(d.plan.challenges)}</p>`:""}
+          ${d.plan.support ? `<p><strong>Support needed:</strong> ${escapeHtml(d.plan.support)}</p>`:""}
+        </div>
+
+        <div class="detail-section">
+          <h4>This Week's Targets</h4>
+          <p>Monetization: ${fmtMoney(d.target.monetization)} · Advertising: ${fmtMoney(d.target.advertising)} · Course: ${fmtMoney(d.target.course)}</p>
+          <p>Total: ${fmtMoney(d.target.total)} · Collection: ${fmtMoney(d.target.collection)} · Expected ROs: ${d.target.ros||"—"}</p>
+        </div>
+
+        <div class="detail-section" style="margin-bottom:0;">
+          <h4>Action Plan</h4>
+          <ul>${d.actions.filter(a=>a.priority).map(a=>`<li>${escapeHtml(a.priority)} — <em>${escapeHtml(a.owner)}</em>${a.outcome ? " → "+escapeHtml(a.outcome):""}</li>`).join("") || "<li>Not provided</li>"}</ul>
+        </div>
+      </div>
+    </div>
+    `;
+  }
+
+  function render(){
+    root.innerHTML = `
+      ${renderTopbar()}
+      ${state.tab === "form" ? renderForm() : renderDashboard()}
+      ${renderDetail()}
+      ${state.toast ? `<div class="toast">${state.toast}</div>` : ""}
+    `;
+    attachHandlers();
+  }
+
+  function attachHandlers(){
+    root.querySelectorAll("[data-tab]").forEach(el=>{
+      el.addEventListener("click", ()=> switchTab(el.getAttribute("data-tab")));
+    });
+
+    if(state.tab === "form"){
+      const r = state.report;
+      const bind = (id, path) => {
+        const el = root.querySelector("#"+id);
+        if(!el) return;
+        el.addEventListener("input", (e)=>{
+          setPath(r, path, e.target.value);
+        });
+      };
+      bind("f-team","team"); bind("f-presenter","presenter"); bind("f-week","week");
+      bind("lw-monetization","lastWeek.monetization"); bind("lw-advertising","lastWeek.advertising");
+      bind("lw-course","lastWeek.course"); bind("lw-total","lastWeek.totalRevenue");
+      bind("lw-ros","lastWeek.ros"); bind("lw-collected","lastWeek.collected");
+      bind("lw-achievements","lastWeek.achievements");
+      bind("best-content","bestContent");
+      bind("plan-content","plan.content"); bind("plan-campaigns","plan.campaigns");
+      bind("plan-focus","plan.focus"); bind("plan-challenges","plan.challenges"); bind("plan-support","plan.support");
+      bind("tg-monetization","target.monetization"); bind("tg-advertising","target.advertising");
+      bind("tg-course","target.course"); bind("tg-total","target.total");
+      bind("tg-collection","target.collection"); bind("tg-ros","target.ros");
+
+      root.querySelectorAll("[data-cat]").forEach(el=>{
+        el.addEventListener("click", ()=>{ r.category = el.getAttribute("data-cat"); render(); });
+      });
+      root.querySelectorAll("[data-type]").forEach(el=>{
+        el.addEventListener("click", ()=>{ r.type = el.getAttribute("data-type"); render(); });
+      });
+      root.querySelectorAll("[data-content-idx]").forEach(el=>{
+        el.addEventListener("input", (e)=>{
+          const i = parseInt(el.getAttribute("data-content-idx"));
+          const f = el.getAttribute("data-content-field");
+          r.topContent[i][f] = e.target.value;
+        });
+      });
+      root.querySelectorAll("[data-action-idx]").forEach(el=>{
+        el.addEventListener("input", (e)=>{
+          const i = parseInt(el.getAttribute("data-action-idx"));
+          const f = el.getAttribute("data-action-field");
+          r.actions[i][f] = e.target.value;
+        });
+      });
+
+      const btnSave = root.querySelector("#btn-save");
+      if(btnSave) btnSave.addEventListener("click", saveReport);
+      const btnReset = root.querySelector("#btn-reset");
+      if(btnReset) btnReset.addEventListener("click", ()=>{
+        if(confirm("Clear all fields in this form?")){ state.report = emptyReport(); render(); }
+      });
+    } else {
+      const weekSel = root.querySelector("#week-select");
+      if(weekSel) weekSel.addEventListener("change", (e)=>{ state.week = e.target.value; render(); });
+      root.querySelectorAll("tr[data-detail]").forEach(el=>{
+        el.addEventListener("click", ()=>{ state.detailKey = el.getAttribute("data-detail"); render(); });
+      });
+      const overlay = root.querySelector("#detail-overlay");
+      if(overlay) overlay.addEventListener("click", (e)=>{ if(e.target.id==="detail-overlay"){ state.detailKey=null; render(); } });
+      const closeBtn = root.querySelector("#detail-close");
+      if(closeBtn) closeBtn.addEventListener("click", ()=>{ state.detailKey=null; render(); });
+    }
+  }
+
+  function setPath(obj, path, value){
+    const parts = path.split(".");
+    let cur = obj;
+    for(let i=0;i<parts.length-1;i++){ cur = cur[parts[i]]; }
+    cur[parts[parts.length-1]] = value;
+  }
+
+  render();
+})();
+</script>
